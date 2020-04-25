@@ -23,6 +23,12 @@ func mainPage() echo.HandlerFunc {
 	}
 }
 
+func messagingAPI() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		return c.String(http.StatusOK, "")
+	}
+}
+
 func main() {
 	e := echo.New()
 
@@ -30,6 +36,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	e.GET("/", mainPage())
+	e.POST("/linebot", messagingAPI())
 
 	err := e.Start(":" + getPort())
 	if err != nil {
