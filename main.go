@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -12,7 +13,7 @@ import (
 	"github.com/7rs/line-bot-go/line"
 )
 
-var client = line.NewMessagingAPIClient(os.Getenv("CHANNEL_ACCESS_TOKEN"), os.Getenv("CHANNEL_SECRET"))
+var api = line.NewMessagingAPIClient(os.Getenv("CHANNEL_ACCESS_TOKEN"), os.Getenv("CHANNEL_SECRET"))
 
 func setColog() {
 	colog.SetDefaultLevel(colog.LDebug)
@@ -39,7 +40,15 @@ func index() echo.HandlerFunc {
 }
 
 func linebot(c echo.Context, req *http.Request, body []byte) error {
-	return line.CreateTestResponse(c, http.StatusOK, "OK")
+	data := new(line.RequestBodyJSON)
+	if err := json.Unmarshal(body, data); err != nil {
+		log.Printf("error: %v", err)
+	} else {
+		for _, event := range data.Events {
+			log.Printf("debug: Event: %v", event)
+		}
+	}
+	return line.GetJSONResponse(c)
 }
 
 func startEcho() error {
@@ -48,11 +57,11 @@ func startEcho() error {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
-		log.Println("Request Body:", string(reqBody))
+		log.Printf("debug: Request Body: %v", string(reqBody))
 	}))
 
 	e.GET("/", index())
-	e.POST("/linebot", client.GetHandler(linebot))
+	e.POST("/linebot", api.GetHandler(linebot))
 
 	err := e.Start(":" + getPort())
 	if err != nil {
