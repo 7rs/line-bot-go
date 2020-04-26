@@ -1,11 +1,6 @@
 package main
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -13,94 +8,63 @@ import (
 	"github.com/comail/colog"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+
+	"github.com/7rs/line-bot-go/line"
 )
+
+var client = line.NewMessagingAPIClient(os.Getenv("CHANNEL_ACCESS_TOKEN"), os.Getenv("CHANNEL_SECRET"))
 
 func setColog() {
 	colog.SetDefaultLevel(colog.LDebug)
 	colog.SetMinLevel(colog.LTrace)
 	colog.SetFormatter(&colog.StdFormatter{
 		Colors: true,
-		Flag:   log.Ldate | log.Ltime | log.Lshortfile,
+		Flag:   log.Lshortfile,
 	})
 	colog.Register()
 }
 
 func getPort() string {
 	port := os.Getenv("PORT")
-	if port == "" {
+	if port := os.Getenv("PORT"); port == "" {
 		return "8000"
 	}
 	return port
 }
 
-func mainPage() echo.HandlerFunc {
+func index() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, world!")
 	}
 }
 
-func verificationSignature(c echo.Context, req *http.Request, body []byte) error {
-	// Get line signature
-	receivedSignature, err := base64.StdEncoding.DecodeString(req.Header.Get("X-Line-Signature"))
-	if err != nil {
-		return err
-	}
-
-	// Get hash digest
-	hash := hmac.New(sha256.New, []byte(os.Getenv("CHANNEL_SECRET")))
-	_, err = hash.Write(body)
-	if err != nil {
-		return err
-	}
-	signature := hash.Sum(nil)
-
-	// Verify signature
-	log.Println("info: Received:", receivedSignature)
-	log.Println("info: Correct:", signature)
-	if !hmac.Equal(receivedSignature, signature) {
-		return c.String(http.StatusForbidden, "X-Line-Signature is invalid.")
-	}
-
-	return nil
+func linebot(c echo.Context, req *http.Request, body []byte) error {
+	return line.CreateTestResponse(c, http.StatusOK, "OK")
 }
 
-func messagingAPI() echo.HandlerFunc {
-	return func(c echo.Context) error {
-		// Get request body
-		req := c.Request()
-
-		// Read request body
-		body, err := ioutil.ReadAll(req.Body)
-		if err != nil {
-			return err
-		}
-
-		// Verify signature
-		if err = verificationSignature(c, req, body); err != nil {
-			return err
-		}
-
-		// Return response
-		return c.String(http.StatusOK, "OK")
-	}
-}
-
-func main() {
-	setColog()
-
+func startEcho() error {
 	e := echo.New()
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
-		fmt.Println("Request Body:", string(reqBody))
+		log.Println("Request Body:", string(reqBody))
 	}))
 
-	e.GET("/", mainPage())
-	e.POST("/linebot", messagingAPI())
+	e.GET("/", index())
+	e.POST("/linebot", client.GetHandler(linebot))
 
 	err := e.Start(":" + getPort())
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func main() {
+	setColog()
+
+	if err := startEcho(); err != nil {
 		log.Fatal(err)
 	}
 }
