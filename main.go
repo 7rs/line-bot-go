@@ -39,7 +39,7 @@ func index() echo.HandlerFunc {
 }
 
 func linebot(c echo.Context, req *http.Request, body []byte) error {
-	return line.CreateTestResponse(c, http.StatusOK, "OK")
+	return line.CreateTestResponse(c, http.StatusOK, "unko")
 }
 
 func startEcho() error {

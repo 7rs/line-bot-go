@@ -18,7 +18,7 @@ type TestResponse struct {
 }
 
 func CreateTestResponse(c echo.Context, code int, msg string) error {
-	return c.JSON(code, TestResponse{
+	return c.JSON(code, &TestResponse{
 		Message: msg,
 		Code:    code,
 	})
@@ -37,11 +37,13 @@ func (p *Client) GetHandler(f func(c echo.Context, req *http.Request, body []byt
 
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
-			return newLineAPIError(c, http.StatusBadRequest, "Could not read request body.")
+			errJSON, _ := DoMessagingAPIError(c, "Could not read request body.", http.StatusBadRequest)
+			return c.JSON(errJSON.Code, errJSON)
 		}
 
-		if err = p.verifySignature(c, req, body); err != nil {
-			return err
+		errJSON, err := p.verifySignature(c, req, body)
+		if err != nil {
+			return c.JSON(errJSON.Code, errJSON)
 		}
 
 		return f(c, req, body)
