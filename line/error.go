@@ -4,20 +4,20 @@ import (
 	"github.com/labstack/echo"
 )
 
-type MessagingAPIErrorJSON struct {
+type messagingAPIErrorJSON struct {
 	Message string `json:"message"`
 	Code    int    `json:"code"`
 }
 
-type MessagingAPIError struct{}
+type messagingAPIError struct{}
 
-func (e *MessagingAPIError) Error() string {
+func (e *messagingAPIError) Error() string {
 	return "Error occurred in Messaging API."
 }
 
-func DoMessagingAPIError(c echo.Context, msg string, code int) (*MessagingAPIErrorJSON, error) {
-	return &MessagingAPIErrorJSON{
+func doMessagingAPIError(c echo.Context, msg string, code int) (*messagingAPIErrorJSON, error) {
+	return &messagingAPIErrorJSON{
 		Message: msg,
 		Code:    code,
-	}, &MessagingAPIError{}
+	}, &messagingAPIError{}
 }

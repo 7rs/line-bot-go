@@ -7,37 +7,34 @@ import (
 	"github.com/labstack/echo"
 )
 
-type Client struct {
+type APIClient struct {
 	Token  string
 	Secret string
 }
 
-type TestResponse struct {
-	Message string `json:"message"`
-	Code    int    `json:"code"`
+type RequestBodyJSON struct {
+	Destination string                   `json:"destination"`
+	Events      []map[string]interface{} `json:"events"`
 }
 
-func CreateTestResponse(c echo.Context, code int, msg string) error {
-	return c.JSON(code, &TestResponse{
-		Message: msg,
-		Code:    code,
-	})
+func GetJSONResponse(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]string{})
 }
 
-func NewMessagingAPIClient(token string, secret string) *Client {
-	return &Client{
+func NewMessagingAPIClient(token string, secret string) *APIClient {
+	return &APIClient{
 		Token:  token,
 		Secret: secret,
 	}
 }
 
-func (p *Client) GetHandler(f func(c echo.Context, req *http.Request, body []byte) error) echo.HandlerFunc {
+func (p *APIClient) GetHandler(f func(c echo.Context, req *http.Request, body []byte) error) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := c.Request()
 
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
-			errJSON, _ := DoMessagingAPIError(c, "Could not read request body.", http.StatusBadRequest)
+			errJSON, _ := doMessagingAPIError(c, "Could not read request body.", http.StatusBadRequest)
 			return c.JSON(errJSON.Code, errJSON)
 		}
 
