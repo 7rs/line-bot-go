@@ -6,14 +6,26 @@ import (
 	"net/http"
 )
 
-type replyMessage struct {
+type TextMessage struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
+type replyMessageBody struct {
 	ReplyToken           string      `json:"replyToken"`
 	Messages             interface{} `json:"messages"`
 	NotificationDisabled bool        `json:"notificationDisabled"`
 }
 
-func (p *APIClient) SendReplyMessage(replyToken string, messages map[string]interface{}, notificationDisabled bool) error {
-	body, err := json.Marshal(&replyMessage{
+func NewTextMessage(text string) map[string]interface{} {
+	return map[string]interface{}{
+		"type": "text",
+		"text": text,
+	}
+}
+
+func (p *APIClient) SendReplyMessage(replyToken string, messages []map[string]interface{}, notificationDisabled bool) error {
+	body, err := json.Marshal(&replyMessageBody{
 		ReplyToken:           replyToken,
 		Messages:             messages,
 		NotificationDisabled: notificationDisabled,
