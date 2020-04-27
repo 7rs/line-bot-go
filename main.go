@@ -45,7 +45,13 @@ func linebot(c echo.Context, req *http.Request, body []byte) error {
 		log.Printf("error: %v", err)
 	} else {
 		for _, event := range data.Events {
-			log.Printf("debug: Event: %v", event)
+			if event["type"] == "message" {
+				token := event["replyToken"].(string)
+				messages := []map[string]interface{}{line.NewTextMessage("received")}
+				if err := api.SendReplyMessage(token, messages, false); err != nil {
+					log.Printf("error: %v", err)
+				}
+			}
 		}
 	}
 	return line.GetJSONResponse(c)
