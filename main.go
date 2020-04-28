@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -10,10 +9,11 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 
-	"github.com/7rs/line-bot-go/line"
+	sdk "github.com/line/line-bot-sdk-go/linebot"
 )
 
-var api = line.NewMessagingAPIClient(os.Getenv("CHANNEL_ACCESS_TOKEN"), os.Getenv("CHANNEL_SECRET"))
+var err error
+var bot *sdk.Client
 
 func setColog() {
 	colog.SetDefaultLevel(colog.LDebug)
@@ -39,22 +39,31 @@ func index() echo.HandlerFunc {
 	}
 }
 
-func linebot(c echo.Context, req *http.Request, body []byte) error {
-	data := new(line.RequestBodyJSON)
-	if err := json.Unmarshal(body, data); err != nil {
-		log.Printf("error: %v", err)
-	} else {
-		for _, event := range data.Events {
-			if event["type"].(string) == "message" {
-				token := event["replyToken"].(string)
-				messages := []map[string]interface{}{line.NewTextMessage("received")}
-				if err := api.SendReplyMessage(token, messages, false); err != nil {
-					log.Printf("error: %v", err)
+func linebot() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		req := c.Request()
+		events, err := bot.ParseRequest(req)
+		if err != nil {
+			if err == sdk.ErrInvalidSignature {
+				return c.String(http.StatusBadRequest, "Bad Request")
+			} else {
+				return c.String(http.StatusInternalServerError, "Internal Server Error")
+			}
+		}
+
+		for _, event := range events {
+			if event.Type == sdk.EventTypeMessage {
+				switch msg := event.Message.(type) {
+				case *sdk.TextMessage:
+					if _, err := bot.ReplyMessage(event.ReplyToken, sdk.NewTextMessage(msg.Text)).Do(); err != nil {
+						log.Printf("error: %v", err)
+					}
 				}
 			}
 		}
+
+		return c.String(http.StatusOK, "OK")
 	}
-	return line.GetJSONResponse(c)
 }
 
 func startEcho() error {
@@ -67,7 +76,7 @@ func startEcho() error {
 	}))
 
 	e.GET("/", index())
-	e.POST("/linebot", api.GetHandler(linebot))
+	e.POST("/linebot", linebot())
 
 	err := e.Start(":" + getPort())
 	if err != nil {
@@ -77,6 +86,11 @@ func startEcho() error {
 }
 
 func main() {
+	bot, err = sdk.New(os.Getenv("CHANNEL_SECRET"), os.Getenv("CHANNEL_ACCESS_TOKEN"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	setColog()
 
 	if err := startEcho(); err != nil {
