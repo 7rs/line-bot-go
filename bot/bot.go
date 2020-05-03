@@ -1,8 +1,6 @@
 package bot
 
 import (
-	"os"
-
 	"github.com/labstack/echo"
 	sdk "github.com/line/line-bot-sdk-go/linebot"
 	"golang.org/x/net/context"
@@ -16,14 +14,14 @@ type Bot struct {
 	Service *youtube.Service
 }
 
-func NewBotClient(channelSecret string, channelAccessToken string) (*Bot, error) {
+func NewBotClient(channelSecret string, channelAccessToken string, apiKey string) (*Bot, error) {
 	sdkClient, err := sdk.New(channelSecret, channelAccessToken)
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
-	service, err := youtube.NewService(ctx, option.WithAPIKey(os.Getenv("API_KEY")))
+	service, err := youtube.NewService(ctx, option.WithAPIKey(apiKey))
 	if err != nil {
 		return nil, err
 	}
