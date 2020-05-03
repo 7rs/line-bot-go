@@ -59,8 +59,7 @@ func (b *Bot) sendYoutubeInfo(event *sdk.Event, id string) {
 func (b *Bot) handleMessage(event *sdk.Event) {
 	switch msg := event.Message.(type) {
 	case *sdk.TextMessage:
-		text := strings.ToLower(msg.Text)
-		if r := youtubeLinkRegex.FindStringSubmatch(text); len(r) >= 2 {
+		if r := youtubeLinkRegex.FindStringSubmatch(msg.Text); len(r) >= 2 {
 			b.sendYoutubeInfo(event, r[1])
 		}
 	}
