@@ -10,7 +10,7 @@ import (
 	sdk "github.com/line/line-bot-sdk-go/linebot"
 )
 
-var youtubeLinkRegex = regexp.MustCompile(`/watch\?v=([\w\-]+)/`)
+var youtubeLinkRegex = regexp.MustCompile(`(?:youtube\.com\/\S*(?:(?:\/e(?:mbed))?\/|watch\?(?:\S*?&?v\=))|youtu\.be\/)([a-zA-Z0-9_-]+)`)
 
 func (b *Bot) getEvents(c echo.Context) ([]*sdk.Event, error) {
 	req := c.Request()
@@ -31,7 +31,7 @@ func handleError(c echo.Context, err error) error {
 
 func (b *Bot) sendYoutubeInfo(event *sdk.Event, text string) {
 	queries := youtubeLinkRegex.FindStringSubmatch(text)
-	if len(queries) <= 2 {
+	if len(queries) < 2 {
 		log.Printf("warn: Not found id.")
 		return
 	}
@@ -39,6 +39,10 @@ func (b *Bot) sendYoutubeInfo(event *sdk.Event, text string) {
 	res, err := b.Service.Videos.List("id,snippet,statistics").Id(queries[1]).MaxResults(1).Do()
 	if err != nil {
 		log.Printf("error: %v", err)
+		return
+	}
+	if len(res.Items) == 0 {
+		log.Printf("warn: Not found video.")
 		return
 	}
 	item := res.Items[0]
@@ -84,9 +88,9 @@ func (b *Bot) handleEvents(events []*sdk.Event) {
 
 	for _, event := range events {
 		switch event.Type {
-		case sdk.EventTypeMemberJoined:
+		case sdk.EventTypeMessage:
 			b.handleMessage(event)
-		case sdk.EventTypeJoin:
+		case sdk.EventTypeMemberJoined:
 			b.sendWelcomeMessage(event)
 		}
 	}
