@@ -37,7 +37,7 @@ func (b *Bot) sendYoutubeInfo(event *sdk.Event, id string) {
 		return
 	}
 	if len(res.Items) == 0 {
-		if _, err := b.Client.ReplyMessage(event.ReplyToken, sdk.NewTextMessage("Not found video :/")).Do(); err != nil {
+		if _, err := b.Client.ReplyMessage(event.ReplyToken, sdk.NewTextMessage("Not found video :/\nVideo ID: "+id)).Do(); err != nil {
 			log.Printf("error: %v", err)
 		}
 		return
