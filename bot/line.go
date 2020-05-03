@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/labstack/echo"
@@ -29,28 +30,24 @@ func handleError(c echo.Context, err error) error {
 	return c.String(http.StatusInternalServerError, "Internal Server Error")
 }
 
-func (b *Bot) sendYoutubeInfo(event *sdk.Event, text string) {
-	queries := youtubeLinkRegex.FindStringSubmatch(text)
-	if len(queries) < 2 {
-		log.Printf("warn: Not found id.")
-		return
-	}
-
-	res, err := b.Service.Videos.List("id,snippet,statistics").Id(queries[1]).MaxResults(1).Do()
+func (b *Bot) sendYoutubeInfo(event *sdk.Event, id string) {
+	res, err := b.Service.Videos.List("id,snippet,statistics").Id(id).MaxResults(1).Do()
 	if err != nil {
 		log.Printf("error: %v", err)
 		return
 	}
 	if len(res.Items) == 0 {
-		log.Printf("warn: Not found video.")
+		if _, err := b.Client.ReplyMessage(event.ReplyToken, sdk.NewTextMessage("Not found video :/")).Do(); err != nil {
+			log.Printf("error: %v", err)
+		}
 		return
 	}
-	item := res.Items[0]
 
+	item := res.Items[0]
 	info := strings.Join([]string{
 		"Title: " + item.Snippet.Title,
-		"Views: " + string(item.Statistics.ViewCount),
-		"Likes: " + string(item.Statistics.LikeCount),
+		"Views: " + strconv.Itoa(int(item.Statistics.ViewCount)),
+		"Likes: " + strconv.Itoa(int(item.Statistics.LikeCount)),
 	}, "\n")
 
 	if _, err := b.Client.ReplyMessage(event.ReplyToken, sdk.NewTextMessage(info)).Do(); err != nil {
@@ -63,8 +60,8 @@ func (b *Bot) handleMessage(event *sdk.Event) {
 	switch msg := event.Message.(type) {
 	case *sdk.TextMessage:
 		text := strings.ToLower(msg.Text)
-		if strings.Contains(text, "youtube.com") {
-			b.sendYoutubeInfo(event, text)
+		if r := youtubeLinkRegex.FindStringSubmatch(text); len(r) >= 2 {
+			b.sendYoutubeInfo(event, r[1])
 		}
 	}
 }
