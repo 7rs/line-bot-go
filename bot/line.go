@@ -4,8 +4,6 @@ import (
 	"log"
 	"net/http"
 	"regexp"
-	"strconv"
-	"strings"
 
 	"github.com/labstack/echo"
 	sdk "github.com/line/line-bot-sdk-go/linebot"
@@ -42,15 +40,21 @@ func (b *Bot) sendYoutubeInfo(event *sdk.Event, id string) {
 		}
 		return
 	}
-
 	item := res.Items[0]
-	info := strings.Join([]string{
-		"Title: " + item.Snippet.Title,
-		"Views: " + strconv.Itoa(int(item.Statistics.ViewCount)),
-		"Likes: " + strconv.Itoa(int(item.Statistics.LikeCount)),
-	}, "\n")
 
-	if _, err := b.Client.ReplyMessage(event.ReplyToken, sdk.NewTextMessage(info)).Do(); err != nil {
+	container, err := getYoutubeDataFlexContainer(&youtubeData{
+		Thumbnail: item.Snippet.Thumbnails.High.Url,
+		Title:     item.Snippet.Title,
+		Views:     int(item.Statistics.ViewCount),
+		Likes:     int(item.Statistics.LikeCount),
+		ID:        id,
+	})
+	if err != nil {
+		log.Printf("error: %v", err)
+		return
+	}
+
+	if _, err := b.Client.ReplyMessage(event.ReplyToken, sdk.NewFlexMessage("YouTube", *container)).Do(); err != nil {
 		log.Printf("error: %v", err)
 		return
 	}

@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	cloud.google.com/go v0.56.0 // indirect
+	github.com/bitly/go-simplejson v0.5.0
 	github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/golang/protobuf v1.4.0 // indirect
