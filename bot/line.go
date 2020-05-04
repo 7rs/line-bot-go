@@ -42,13 +42,7 @@ func (b *Bot) sendYoutubeInfo(event *sdk.Event, id string) {
 	}
 	item := res.Items[0]
 
-	container, err := getYoutubeDataFlexContainer(&youtubeData{
-		Thumbnail: item.Snippet.Thumbnails.High.Url,
-		Title:     item.Snippet.Title,
-		Views:     int(item.Statistics.ViewCount),
-		Likes:     int(item.Statistics.LikeCount),
-		ID:        id,
-	})
+	container, err := getYoutubeDataFlexContainer(id, item.Snippet, item.Statistics)
 	if err != nil {
 		log.Printf("error: %v", err)
 		return

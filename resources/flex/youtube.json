@@ -1,85 +1,50 @@
 {
   "type": "bubble",
-  "body": {
+  "direction": "ltr",
+  "header": {
     "type": "box",
     "layout": "vertical",
     "contents": [
       {
-        "type": "image",
-        "url": "Thumbnail",
-        "size": "full",
-        "aspectMode": "cover",
-        "aspectRatio": "4:3"
-      },
-      {
-        "type": "box",
-        "layout": "vertical",
-        "contents": [
-          {
-            "type": "text",
-            "text": "No Title",
-            "size": "sm",
-            "align": "center",
-            "color": "#cbd0d3"
-          }
-        ],
-        "position": "absolute",
-        "backgroundColor": "#333333cc",
-        "paddingAll": "2px",
-        "paddingStart": "10px",
-        "paddingEnd": "10px",
-        "offsetEnd": "0px",
-        "offsetStart": "0px"
-      },
-      {
-        "type": "box",
-        "layout": "horizontal",
-        "contents": [
-          {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-              {
-                "type": "text",
-                "text": "▶ 0",
-                "size": "sm",
-                "color": "#cbd0d3",
-                "align": "center"
-              }
-            ],
-            "paddingStart": "10px",
-            "paddingEnd": "3px"
-          },
-          {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-              {
-                "type": "text",
-                "text": "👍 0",
-                "size": "sm",
-                "color": "#cbd0d3",
-                "align": "center"
-              }
-            ],
-            "paddingEnd": "10px",
-            "paddingStart": "3px"
-          }
-        ],
-        "position": "absolute",
-        "backgroundColor": "#333333cc",
-        "offsetBottom": "0px",
-        "offsetStart": "0px",
-        "offsetEnd": "0px",
-        "paddingTop": "2px",
-        "paddingBottom": "2px"
+        "type": "text",
+        "text": "Video Title",
+        "size": "xs",
+        "align": "center"
       }
-    ],
-    "paddingAll": "0px",
+    ]
+  },
+  "hero": {
+    "type": "image",
+    "url": "Video Thumbnail",
+    "size": "full",
+    "aspectRatio": "16:9",
+    "aspectMode": "cover",
     "action": {
       "type": "uri",
-      "label": "action",
-      "uri": "https://youtu.be/"
+      "uri": "Video Link"
     }
+  },
+  "body": {
+    "type": "box",
+    "layout": "horizontal",
+    "contents": [
+      {
+        "type": "text",
+        "text": "Video Views",
+        "margin": "xs",
+        "align": "center"
+      },
+      {
+        "type": "separator",
+        "margin": "sm",
+        "color": "#000000"
+      },
+      {
+        "type": "text",
+        "text": "Video Likes",
+        "margin": "sm",
+        "align": "center"
+      }
+    ]
   }
 }
