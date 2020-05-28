@@ -8,33 +8,35 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-var err error
 var e = echo.New()
+var ctx = context.Background()
+
+type Tokens struct {
+	ChannelSecret      string
+	ChannelAccessToken string
+	ApiKey             string
+}
 
 type Client struct {
 	Client  *sdk.Client
 	Service *youtube.Service
 }
 
-func NewBotClient(channelSecret string, channelAccessToken string, apiKey string) (*Client, error) {
-	sdkClient, err := sdk.New(channelSecret, channelAccessToken)
+func NewBotClient(tokens *Tokens) (*Client, error) {
+	sdkClient, err := sdk.New(tokens.ChannelSecret, tokens.ChannelAccessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	service, err := youtube.NewService(ctx, option.WithAPIKey(tokens.ApiKey))
 	if err != nil {
 		return nil, err
 	}
 
 	return &Client{
-		Client: sdkClient,
+		Client:  sdkClient,
+		Service: service,
 	}, nil
-}
-
-func (p *Client) LoginYoutubeService(apiKey string) error {
-	ctx := context.Background()
-	p.Service, err = youtube.NewService(ctx, option.WithAPIKey(apiKey))
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (p *Client) Start() error {
