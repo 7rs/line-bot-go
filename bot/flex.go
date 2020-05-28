@@ -48,7 +48,7 @@ type youtubeData struct {
 	} `json:"body"`
 }
 
-func getYoutubeDataFlexContainer(id string, snippet *youtube.VideoSnippet, statistics *youtube.VideoStatistics) (*sdk.FlexContainer, error) {
+func getYoutubeDataTemplate() (*youtubeData, error) {
 	bytes, err := ioutil.ReadFile(youtubeDataFlexPath)
 	if err != nil {
 		return nil, err
@@ -59,13 +59,19 @@ func getYoutubeDataFlexContainer(id string, snippet *youtube.VideoSnippet, stati
 		return nil, err
 	}
 
+	return data, nil
+}
+
+func editYoutubeData(data *youtubeData, id string, snippet *youtube.VideoSnippet, statistics *youtube.VideoStatistics) {
 	data.Header.Contents[0].Text = snippet.Title
 	data.Hero.URL = snippet.Thumbnails.Maxres.Url
 	data.Hero.Action.URI = "https://youtu.be/" + id
 	data.Body.Contents[0].Text = "▶ " + humanize.Comma(int64(statistics.ViewCount))
 	data.Body.Contents[2].Text = "👍 " + humanize.Comma(int64(statistics.LikeCount))
+}
 
-	bytes, err = json.Marshal(data)
+func getContainer(containier interface{}) (*sdk.FlexContainer, error) {
+	bytes, err := json.Marshal(containier)
 	if err != nil {
 		return nil, err
 	}
@@ -76,4 +82,20 @@ func getYoutubeDataFlexContainer(id string, snippet *youtube.VideoSnippet, stati
 	}
 
 	return &container, nil
+}
+
+func getYoutubeDataFlexContainer(id string, snippet *youtube.VideoSnippet, statistics *youtube.VideoStatistics) (*sdk.FlexContainer, error) {
+	data, err := getYoutubeDataTemplate()
+	if err != nil {
+		return nil, err
+	}
+
+	editYoutubeData(data, id, snippet, statistics)
+
+	container, err := getContainer(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return container, nil
 }
